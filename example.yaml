@@ -1,0 +1,69 @@
+# Beispiel-IDs durch Entitäts-IDs aus deinem Home Assistant ersetzen.
+type: custom:waermepumpe-dashboard-card
+entitaeten:
+  waermepumpe:
+    zustand: sensor.beispiel_waermepumpe_zustand
+    unterstatus: sensor.beispiel_waermepumpe_unterstatus
+    betriebsart: sensor.beispiel_waermepumpe_betriebsart
+    stoerungen: sensor.beispiel_waermepumpe_stoerungen
+    heizanforderung: binary_sensor.beispiel_waermepumpe_heizanforderung
+    nutzt_pv_ueberschuss: binary_sensor.beispiel_waermepumpe_nutzt_pv_ueberschuss
+    vorlauf: sensor.beispiel_waermepumpe_vorlauf
+    ruecklauf: sensor.beispiel_waermepumpe_ruecklauf
+    quelleneingang: sensor.beispiel_waermepumpe_quelleneingang
+    quellenausgang: sensor.beispiel_waermepumpe_quellenausgang
+    quellenpumpe_drehzahl: sensor.beispiel_waermepumpe_quellenpumpe_drehzahl
+    umwaelzpumpe: sensor.beispiel_waermepumpe_umwaelzpumpe
+    verdichter: sensor.beispiel_waermepumpe_verdichter
+    verdichter_eintritt: sensor.beispiel_waermepumpe_verdichter_eintritt
+    verdichter_austritt: sensor.beispiel_waermepumpe_verdichter_austritt
+    verdichter_leistung: sensor.beispiel_waermepumpe_verdichter_leistung
+    betriebsstunden: sensor.beispiel_waermepumpe_betriebsstunden
+    hochdruck: sensor.beispiel_waermepumpe_hochdruck
+    niederdruck: sensor.beispiel_waermepumpe_niederdruck
+    ueberhitzung_ist: sensor.beispiel_waermepumpe_ueberhitzung_ist
+    ueberhitzung_soll: sensor.beispiel_waermepumpe_ueberhitzung_soll
+    expansionsventil: sensor.beispiel_waermepumpe_expansionsventil
+    kondensator_temperatur: sensor.beispiel_waermepumpe_kondensator_temperatur
+    verdampfer_temperatur: sensor.beispiel_waermepumpe_verdampfer_temperatur
+  heizkreis:
+    heizanforderung: sensor.beispiel_heizkreis_heizanforderung
+    mischer: sensor.beispiel_heizkreis_mischer
+    pumpe: binary_sensor.beispiel_heizkreis_pumpe
+    vorlauf: sensor.beispiel_heizkreis_vorlauf
+    ruecklauf: sensor.beispiel_heizkreis_ruecklauf
+    vorlauf_soll: sensor.beispiel_heizkreis_vorlauf_soll
+    betriebsart: select.beispiel_heizkreis_betriebsart
+    raumkorrektur: number.beispiel_heizkreis_raumkorrektur
+    raumtemperatur_ist: sensor.beispiel_heizkreis_raumtemperatur_ist
+    raumtemperatur_soll: sensor.beispiel_heizkreis_raumtemperatur_soll
+    raumfeuchtigkeit: sensor.beispiel_heizkreis_raumfeuchtigkeit
+  energie:
+    gesamtverbrauch: sensor.beispiel_energie_gesamtverbrauch
+    stromtarif: input_number.beispiel_energie_stromtarif
+    tag: sensor.beispiel_energie_tag
+    woche: sensor.beispiel_energie_woche
+    monat: sensor.beispiel_energie_monat
+    jahr: sensor.beispiel_energie_jahr
+    pv_ueberschuss: sensor.beispiel_energie_pv_ueberschuss
+  temperatur:
+    haus_mittelwert: sensor.beispiel_temperatur_haus_mittelwert
+    aussen: sensor.beispiel_temperatur_aussen
+  thermostate:
+    ferienmodus: input_boolean.beispiel_thermostate_ferienmodus
+    bad: climate.beispiel_thermostate_bad
+    buero: climate.beispiel_thermostate_buero
+    dusche: climate.beispiel_thermostate_dusche
+    gaestezimmer: climate.beispiel_thermostate_gaestezimmer
+    kueche: climate.beispiel_thermostate_kueche
+    schlafzimmer: climate.beispiel_thermostate_schlafzimmer
+    terrassenzimmer: climate.beispiel_thermostate_terrassenzimmer
+    toilette: climate.beispiel_thermostate_toilette
+    ess_wohnzimmer: climate.beispiel_thermostate_ess_wohnzimmer
+    sauna: climate.beispiel_thermostate_sauna
+  geraete:
+    buero_klimaanlage: climate.beispiel_geraete_buero_klimaanlage
+    wintergarten_heizung: climate.beispiel_geraete_wintergarten_heizung
+    wintergarten_lueftung: climate.beispiel_geraete_wintergarten_lueftung
+    garage_entfeuchter: humidifier.beispiel_geraete_garage_entfeuchter
+    sauna_heizung: climate.beispiel_geraete_sauna_heizung
