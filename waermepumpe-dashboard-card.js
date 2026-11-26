@@ -382,15 +382,15 @@ class DashboardCardEditor extends HTMLElement {
   }
 }
 
-const READING_ROW_HEIGHT = 21;
+const READING_ROWS_HEIGHT = 105;
 const READING_LAYOUT = {
   top: 394,
   height: 138,
   rowTop: 423,
   padding: 8,
-  source: { x: 44, width: 152, rowHeight: 2 * READING_ROW_HEIGHT, columns: 1 },
-  compressor: { x: 208, width: 284, rowHeight: READING_ROW_HEIGHT, columns: 2 },
-  heatPump: { x: 504, width: 152, rowHeight: 2 * READING_ROW_HEIGHT, columns: 1 },
+  source: { x: 44, width: 152, rowHeight: READING_ROWS_HEIGHT / 3, columns: 1 },
+  compressor: { x: 208, width: 284, rowHeight: READING_ROWS_HEIGHT / 5, columns: 2 },
+  heatPump: { x: 504, width: 152, rowHeight: READING_ROWS_HEIGHT / 3, columns: 1 },
 };
 
 function readingHitArea({ x, width, rowHeight, columns }, row, column = 0) {
@@ -570,23 +570,28 @@ const BUTTON_CONFIG = {
       "    let panel=rect(x,top,width,height,'#F7FAFC')+t(x+padding,417,title,12,'#526978',700);",
       "    const columnWidth=width/columns;",
       "    const dividers=[];",
+      "    if(columns===1) panel+='<g dominant-baseline=\"central\">';",
       "    if(columns===2) dividers.push(`M${x+columnWidth} ${rowTop} V${rowTop+rowHeight*rows.length}`);",
       "    rows.forEach((row,index)=>{",
       "      const y=rowTop+index*rowHeight;",
-      "      const baseline=y+16.5;",
+      "      const textY=y+(columns===1 ? rowHeight/2 : 16.5);",
       "      if(index>0) dividers.push(`M${x+padding} ${y} H${x+width-padding}`);",
-      "      row.forEach(([label,value],column)=>{",
+      "      row.forEach(([label,value,unit],column)=>{",
       "        const left=x+columnWidth*column;",
-      "        panel+=t(left+padding,baseline,label,12,'#526978',600)",
-      "          +t(left+columnWidth-padding,baseline,value,17.5,'#243C4A',700,'end');",
+      "        const right=left+columnWidth-padding;",
+      "        const unitX=right-21;",
+      "        panel+=t(left+padding,textY,label,12,'#526978',600)",
+      "          +t(unit ? unitX-4 : right,textY,value,17.5,'#243C4A',700,'end');",
+      "        if(unit) panel+=t(unitX,textY,unit,17.5,'#243C4A',700);",
       "      });",
       "    });",
+      "    if(columns===1) panel+='</g>';",
       "    return panel+`<path d=\"${dividers.join(' ')}\" stroke=\"#DCE5EB\" stroke-width=\"1\"/>`;",
       "  };",
       "  const temperatureRows=(label1,id1,label2,id2)=>[",
-      "    [[label1,temp(id1)]],",
-      "    [[label2,temp(id2)]],",
-      "    [['Δ',fmt(num(id1)-num(id2))+' K']]",
+      "    [[label1,fmt(num(id1)),'°C']],",
+      "    [[label2,fmt(num(id2)),'°C']],",
+      "    [['Δ',fmt(num(id1)-num(id2)),'K']]",
       "  ];",
       "  const alarm=raw(ids.waermepumpe.stoerungen);",
       "  const ok=valid(alarm) && Number(alarm)===0;",
