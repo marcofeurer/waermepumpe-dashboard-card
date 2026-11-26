@@ -382,10 +382,32 @@ class DashboardCardEditor extends HTMLElement {
   }
 }
 
+const READING_LAYOUT = {
+  top: 394,
+  height: 138,
+  source: { x: 44, width: 138, rowTop: 423, rowHeight: 38, columns: 1 },
+  compressor: { x: 194, width: 312, rowTop: 423, rowHeight: 20, columns: 2 },
+  heatPump: { x: 518, width: 138, rowTop: 423, rowHeight: 38, columns: 1 },
+};
+
+function readingHitArea({ x, width, rowTop, rowHeight, columns }, row, column = 0) {
+  const columnWidth = width / columns;
+  return [
+    { position: "absolute" },
+    { left: `${(x + columnWidth * column) / 1000 * 100}%` },
+    { top: `${(rowTop + rowHeight * row) / 1080 * 100}%` },
+    { width: `${columnWidth / 1000 * 100}%` },
+    { height: `${rowHeight / 1080 * 100}%` },
+    { "z-index": 7 },
+    { "pointer-events": "auto" },
+  ];
+}
+
 // Lovelace-Konfiguration der zugrunde liegenden Button Card.
 const BUTTON_CONFIG = {
   "type": "custom:button-card",
   "variables": {
+    "reading_layout": READING_LAYOUT,
     "entitaeten": {
       "waermepumpe": {
         "zustand": "sensor.beispiel_waermepumpe_zustand",
@@ -539,12 +561,16 @@ const BUTTON_CONFIG = {
       "      +t(cx,279,Number.isFinite(n)?fmt(n,0)+' %':'—',27,'#243C4A',700,'middle')",
       "      +t(cx,343,title,15,'#526978',600,'middle')+t(cx,365,sub||'Drehzahl / Ansteuerung',11,'#83939F',400,'middle');",
       "  };",
-      "  const pair=(x,title,label1,id1,label2,id2,delta)=>{",
-      "    const a=num(id1),b=num(id2);",
-      "    return rect(x,394,192,128,'#F7FAFC')+t(x+16,417,title,12,'#526978',700)",
-      "      +t(x+16,444,label1,12,'#738897')+t(x+175,444,temp(id1),17,'#243C4A',600,'end')",
-      "      +t(x+16,472,label2,12,'#738897')+t(x+175,472,temp(id2),17,'#243C4A',600,'end')",
-      "      +t(x+16,505,delta?'Δ '+fmt(a-b)+' K':'Temperaturen am Verdichter',11,'#6F8493');",
+      "  const readingLayout=variables.reading_layout;",
+      "  const panel=(x,width,title)=>rect(x,readingLayout.top,width,readingLayout.height,'#F7FAFC')",
+      "    +t(x+12,417,title,12,'#526978',700);",
+      "  const pair=({ x, width, rowTop, rowHeight },title,label1,id1,label2,id2)=>{",
+      "    const reading=(label,id,row)=>{",
+      "      const y=rowTop+rowHeight*row;",
+      "      return t(x+12,y+12,label,11,'#526978')+t(x+width-12,y+32,temp(id),17,'#243C4A',600,'end');",
+      "    };",
+      "    return panel(x,width,title)+reading(label1,id1,0)+reading(label2,id2,1)",
+      "      +t(x+12,516,'Δ '+fmt(num(id1)-num(id2))+' K',11,'#6F8493');",
       "  };",
       "  const alarm=raw(ids.waermepumpe.stoerungen);",
       "  const ok=valid(alarm) && Number(alarm)===0;",
@@ -598,7 +624,7 @@ const BUTTON_CONFIG = {
       "  out+=gauge(140,ids.waermepumpe.quellenpumpe_drehzahl,'Quellenpumpe','#299BC1');",
       "  out+=gauge(350,ids.waermepumpe.verdichter,'Verdichter','#1C9A81','Relative Drehzahl in %');",
       "  out+=gauge(560,ids.waermepumpe.umwaelzpumpe,'Heizungspumpe','#D88359');",
-      "  out+=pair(44,'QUELLKREIS','Eintritt',ids.waermepumpe.quelleneingang,'Austritt',ids.waermepumpe.quellenausgang,true);",
+      "  out+=pair(readingLayout.source,'QUELLKREIS','Eintritt',ids.waermepumpe.quelleneingang,'Austritt',ids.waermepumpe.quellenausgang);",
       "",
       "      const verdichterRows=[",
       "        [['Ein',fmt(num(ids.waermepumpe.verdichter_eintritt))+' °C'],['Aus',fmt(num(ids.waermepumpe.verdichter_austritt))+' °C']],",
@@ -607,9 +633,24 @@ const BUTTON_CONFIG = {
       "        [['Ventil',fmt(num(ids.waermepumpe.expansionsventil),0)],['Kond.',fmt(num(ids.waermepumpe.kondensator_temperatur))+' °C']],",
       "        [['Verd.',fmt(num(ids.waermepumpe.verdampfer_temperatur))+' °C'],null]",
       "      ];",
-      "      out+=rect(254,394,192,128,'#F7FAFC')+t(270,417,'VERDICHTER',12,'#526978',700)+'<path d=\"M350 424 V518\" stroke=\"#DCE5EB\" stroke-width=\"1\"/><path d=\"M270 444 H438 M270 463 H438 M270 482 H438 M270 501 H438\" stroke=\"#E5ECF1\" stroke-width=\"0.7\"/>';",
-      "      verdichterRows.forEach((row,i)=>{const y=439+i*19;for(const [column,x,valueX] of [[row[0],270,348],[row[1],356,438]])if(column){out+=t(x,y,column[0],9,'#738897',600)+t(valueX,y,column[1],9.5,'#243C4A',700,'end');}});",
-      "  out+=pair(464,'WÄRMEPUMPE','Vorlauf',ids.waermepumpe.vorlauf,'Rücklauf',ids.waermepumpe.ruecklauf,true);",
+      "      const { x, width, rowTop, rowHeight, columns }=readingLayout.compressor;",
+      "      const columnWidth=width/columns;",
+      "      const dividerX=x+columnWidth;",
+      "      const dividers=[`M${dividerX} ${rowTop} V${rowTop+rowHeight*verdichterRows.length}`];",
+      "      out+=panel(x,width,'VERDICHTER');",
+      "      verdichterRows.forEach((row,i)=>{",
+      "        const top=rowTop+i*rowHeight;",
+      "        if(i>0) dividers.push(`M${x+12} ${top} H${x+width-12}`);",
+      "        row.forEach((entry,column)=>{",
+      "          if(!entry) return;",
+      "          const [label,value]=entry;",
+      "          const left=x+columnWidth*column;",
+      "          out+=t(left+12,top+15,label,12,'#526978',600)",
+      "            +t(left+columnWidth-12,top+15,value,17.5,'#243C4A',700,'end');",
+      "        });",
+      "      });",
+      "      out+=`<path d=\"${dividers.join(' ')}\" stroke=\"#DCE5EB\" stroke-width=\"1\"/>`;",
+      "  out+=pair(readingLayout.heatPump,'WÄRMEPUMPE','Vorlauf',ids.waermepumpe.vorlauf,'Rücklauf',ids.waermepumpe.ruecklauf);",
       "  out+=rect(44,543,612,43,'#F0F6FA','#E4ECF1',12)+t(59,569,mode,16,'#426E86',600);",
       "  out+=t(44,613,'ANLAGENBETRIEB',10,'#83939F',700)+t(44,636,short(textState(ids.waermepumpe.betriebsart),39),17,'#243C4A',600);",
       "      const surplusId=ids.energie.pv_ueberschuss;",
@@ -4582,174 +4623,12 @@ const BUTTON_CONFIG = {
           "z-index": 5
         }
       ],
-      "control_5": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "14%"
-        },
-        {
-          "top": "40.925925925925924%"
-        },
-        {
-          "width": "19.2%"
-        },
-        {
-          "height": "2.4074074074074074%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 2
-        },
-        {
-          "pointer-events": "auto"
-        },
-        {
-          "z-index": 5
-        }
-      ],
-      "control_6": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "14%"
-        },
-        {
-          "top": "43.51851851851852%"
-        },
-        {
-          "width": "19.2%"
-        },
-        {
-          "height": "2.4074074074074074%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 2
-        },
-        {
-          "pointer-events": "auto"
-        },
-        {
-          "z-index": 5
-        }
-      ],
-      "control_7": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "31.3%"
-        },
-        {
-          "top": "40.46296296296296%"
-        },
-        {
-          "width": "8.6%"
-        },
-        {
-          "height": "1.6666666666666667%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 7
-        },
-        {
-          "pointer-events": "auto"
-        }
-      ],
-      "control_8": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "39.900000000000006%"
-        },
-        {
-          "top": "40.46296296296296%"
-        },
-        {
-          "width": "8.6%"
-        },
-        {
-          "height": "1.6666666666666667%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 7
-        },
-        {
-          "pointer-events": "auto"
-        }
-      ],
-      "control_9": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "56%"
-        },
-        {
-          "top": "40.925925925925924%"
-        },
-        {
-          "width": "19.2%"
-        },
-        {
-          "height": "2.4074074074074074%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 2
-        },
-        {
-          "pointer-events": "auto"
-        },
-        {
-          "z-index": 5
-        }
-      ],
-      "control_10": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "56%"
-        },
-        {
-          "top": "43.51851851851852%"
-        },
-        {
-          "width": "19.2%"
-        },
-        {
-          "height": "2.4074074074074074%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 2
-        },
-        {
-          "pointer-events": "auto"
-        },
-        {
-          "z-index": 5
-        }
-      ],
+      "control_5": readingHitArea(READING_LAYOUT.source, 0),
+      "control_6": readingHitArea(READING_LAYOUT.source, 1),
+      "control_7": readingHitArea(READING_LAYOUT.compressor, 0),
+      "control_8": readingHitArea(READING_LAYOUT.compressor, 0, 1),
+      "control_9": readingHitArea(READING_LAYOUT.heatPump, 0),
+      "control_10": readingHitArea(READING_LAYOUT.heatPump, 1),
       "control_11": [
         {
           "position": "absolute"
@@ -5522,188 +5401,13 @@ const BUTTON_CONFIG = {
           "pointer-events": "auto"
         }
       ],
-      "verdichter_history_1_0": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "31.3%"
-        },
-        {
-          "top": "42.129629629629626%"
-        },
-        {
-          "width": "8.6%"
-        },
-        {
-          "height": "1.6666666666666667%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 7
-        },
-        {
-          "pointer-events": "auto"
-        }
-      ],
-      "verdichter_history_1_1": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "39.900000000000006%"
-        },
-        {
-          "top": "42.129629629629626%"
-        },
-        {
-          "width": "8.6%"
-        },
-        {
-          "height": "1.6666666666666667%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 7
-        },
-        {
-          "pointer-events": "auto"
-        }
-      ],
-      "verdichter_history_2_0": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "31.3%"
-        },
-        {
-          "top": "43.7962962962963%"
-        },
-        {
-          "width": "8.6%"
-        },
-        {
-          "height": "1.6666666666666667%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 7
-        },
-        {
-          "pointer-events": "auto"
-        }
-      ],
-      "verdichter_history_2_1": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "39.900000000000006%"
-        },
-        {
-          "top": "43.7962962962963%"
-        },
-        {
-          "width": "8.6%"
-        },
-        {
-          "height": "1.6666666666666667%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 7
-        },
-        {
-          "pointer-events": "auto"
-        }
-      ],
-      "verdichter_history_3_0": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "31.3%"
-        },
-        {
-          "top": "45.46296296296296%"
-        },
-        {
-          "width": "8.6%"
-        },
-        {
-          "height": "1.6666666666666667%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 7
-        },
-        {
-          "pointer-events": "auto"
-        }
-      ],
-      "verdichter_history_3_1": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "39.900000000000006%"
-        },
-        {
-          "top": "45.46296296296296%"
-        },
-        {
-          "width": "8.6%"
-        },
-        {
-          "height": "1.6666666666666667%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 7
-        },
-        {
-          "pointer-events": "auto"
-        }
-      ],
-      "verdichter_history_4_0": [
-        {
-          "position": "absolute"
-        },
-        {
-          "left": "31.3%"
-        },
-        {
-          "top": "47.129629629629626%"
-        },
-        {
-          "width": "8.6%"
-        },
-        {
-          "height": "1.6666666666666667%"
-        },
-        {
-          "transform": "translate(-50%, -50%)"
-        },
-        {
-          "z-index": 7
-        },
-        {
-          "pointer-events": "auto"
-        }
-      ]
+      "verdichter_history_1_0": readingHitArea(READING_LAYOUT.compressor, 1),
+      "verdichter_history_1_1": readingHitArea(READING_LAYOUT.compressor, 1, 1),
+      "verdichter_history_2_0": readingHitArea(READING_LAYOUT.compressor, 2),
+      "verdichter_history_2_1": readingHitArea(READING_LAYOUT.compressor, 2, 1),
+      "verdichter_history_3_0": readingHitArea(READING_LAYOUT.compressor, 3),
+      "verdichter_history_3_1": readingHitArea(READING_LAYOUT.compressor, 3, 1),
+      "verdichter_history_4_0": readingHitArea(READING_LAYOUT.compressor, 4)
     }
   },
   "tap_action": {
