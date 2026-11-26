@@ -382,14 +382,15 @@ class DashboardCardEditor extends HTMLElement {
   }
 }
 
+const READING_ROW_HEIGHT = 21;
 const READING_LAYOUT = {
   top: 394,
   height: 138,
   rowTop: 423,
   padding: 8,
-  source: { x: 44, width: 152, rowHeight: 40, columns: 1 },
-  compressor: { x: 208, width: 284, rowHeight: 20, columns: 2 },
-  heatPump: { x: 504, width: 152, rowHeight: 40, columns: 1 },
+  source: { x: 44, width: 152, rowHeight: 2 * READING_ROW_HEIGHT, columns: 1 },
+  compressor: { x: 208, width: 284, rowHeight: READING_ROW_HEIGHT, columns: 2 },
+  heatPump: { x: 504, width: 152, rowHeight: 2 * READING_ROW_HEIGHT, columns: 1 },
 };
 
 function readingHitArea({ x, width, rowHeight, columns }, row, column = 0) {
@@ -572,11 +573,12 @@ const BUTTON_CONFIG = {
       "    if(columns===2) dividers.push(`M${x+columnWidth} ${rowTop} V${rowTop+rowHeight*rows.length}`);",
       "    rows.forEach((row,index)=>{",
       "      const y=rowTop+index*rowHeight;",
+      "      const baseline=y+16.5;",
       "      if(index>0) dividers.push(`M${x+padding} ${y} H${x+width-padding}`);",
       "      row.forEach(([label,value],column)=>{",
       "        const left=x+columnWidth*column;",
-      "        panel+=t(left+padding,y+15,label,12,'#526978',600)",
-      "          +t(left+columnWidth-padding,y+15,value,17.5,'#243C4A',700,'end');",
+      "        panel+=t(left+padding,baseline,label,12,'#526978',600)",
+      "          +t(left+columnWidth-padding,baseline,value,17.5,'#243C4A',700,'end');",
       "      });",
       "    });",
       "    return panel+`<path d=\"${dividers.join(' ')}\" stroke=\"#DCE5EB\" stroke-width=\"1\"/>`;",
