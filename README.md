@@ -16,18 +16,13 @@ Die Karte verwendet bereits vorhandene Home-Assistant-Entitäten. Übersicht und
 1. Öffne **HACS → ⋮ → Benutzerdefinierte Repositorys**.
 2. Füge die GitHub-Adresse dieses Repositorys hinzu und wähle **Dashboard**.
 3. Öffne **Wärmepumpe und Heizkreis** in HACS und wähle **Herunterladen**. Lade das Dashboard anschließend neu.
-4. Bearbeite dein Dashboard, füge eine **manuelle Karte** hinzu und übernimm [example.yaml](example.yaml). Ersetze die Beispiel-IDs durch deine Entitäts-IDs aus **Entwicklerwerkzeuge → Zustände**.
+4. Öffne **Dashboard bearbeiten → Karte hinzufügen** und wähle **Wärmepumpe und Heizkreis**.
 
-Für eine erste Anzeige kannst du die primäre Entität zuordnen.
+## Entitäten visuell zuordnen
 
-```yaml
-type: custom:waermepumpe-dashboard-card
-entitaeten:
-  waermepumpe:
-    zustand: sensor.beispiel_waermepumpe_zustand
-```
+Öffne **Dashboard bearbeiten → Karte bearbeiten** und klappe die gewünschte Gruppe auf. Die Entitäten sind in **Wärmepumpe**, **Heizkreis**, **Energie und Stromtarif**, **Haus- und Aussentemperatur**, **Thermostate und Ferienmodus** und **Geräte** gegliedert.
 
-Die übrigen Zuordnungen kannst du nach Bedarf aus [example.yaml](example.yaml) ergänzen. Ohne Zuordnung verwendet die Karte Platzhalter-IDs.
+Suche in den Feldern nach Anzeigenamen oder Entitäts-ID. Bereits gespeicherte Zuordnungen erscheinen im Editor. Wenn du ein Feld leerst, verwendet die Karte dort wieder ihre Platzhalter-ID. Du kannst dieselben Zuordnungen auch im YAML-Editor bearbeiten. [Beispielkonfiguration](example.yaml)
 
 Die Vorlage verwendet Betriebszustände und Sensoren von KEBA KeEnergy. Die Verbrauchs- und Tarifwerte kommen aus den unter `energie` zugeordneten Entitäten. Die Anzeige der Kosten übernimmt das Währungsformat CHF aus der Vorlage.
 

@@ -14,6 +14,10 @@ class DashboardCard extends HTMLElement {
     return {};
   }
 
+  static getConfigElement() {
+    return document.createElement(EDITOR_TYPE);
+  }
+
   setConfig(config) {
     const buttonConfig = structuredClone(BUTTON_CONFIG);
     applyEntityOverrides(buttonConfig.variables.entitaeten, config.entitaeten);
@@ -144,6 +148,237 @@ function configureExtras(buttonConfig, config) {
     const popup = fields.heating_curve_popup.card.tap_action.browser_mod.data;
     const defaults = popup.content;
     popup.content = { ...defaults, ...config.heizkurve, type: defaults.type };
+  }
+}
+
+const EDITOR_GROUPS = {
+  waermepumpe: {
+    label: "Wärmepumpe",
+    sections: {
+      "Betrieb": {
+        zustand: "Zustand",
+        unterstatus: "Unterstatus",
+        betriebsart: "Betriebsart",
+        stoerungen: "Störungen",
+        heizanforderung: "Heizanforderung",
+        nutzt_pv_ueberschuss: "Nutzt PV-Überschuss",
+        betriebsstunden: "Betriebsstunden",
+      },
+      "Heizwasser und Wärmequelle": {
+        vorlauf: "Vorlauftemperatur",
+        ruecklauf: "Rücklauftemperatur",
+        quelleneingang: "Quelleneingangstemperatur",
+        quellenausgang: "Quellenausgangstemperatur",
+        quellenpumpe_drehzahl: "Drehzahl der Quellenpumpe",
+        umwaelzpumpe: "Umwälzpumpe",
+      },
+      "Verdichter und Kältekreis": {
+        verdichter: "Verdichter",
+        verdichter_eintritt: "Verdichter-Eintrittstemperatur",
+        verdichter_austritt: "Verdichter-Austrittstemperatur",
+        verdichter_leistung: "Verdichterleistung",
+        hochdruck: "Hochdruck",
+        niederdruck: "Niederdruck",
+        ueberhitzung_ist: "Überhitzung Ist",
+        ueberhitzung_soll: "Überhitzung Soll",
+        expansionsventil: "Expansionsventil",
+        kondensator_temperatur: "Kondensatortemperatur",
+        verdampfer_temperatur: "Verdampfertemperatur",
+      },
+    },
+  },
+  heizkreis: {
+    label: "Heizkreis",
+    sections: {
+      "Betrieb und Steuerung": {
+        heizanforderung: "Heizanforderung",
+        mischer: "Mischer",
+        pumpe: "Heizkreispumpe",
+        betriebsart: "Betriebsart",
+        raumkorrektur: "Raumkorrektur",
+      },
+      "Messwerte und Sollwerte": {
+        vorlauf: "Vorlauftemperatur Ist",
+        ruecklauf: "Rücklauftemperatur",
+        vorlauf_soll: "Vorlauftemperatur Soll",
+        raumtemperatur_ist: "Raumtemperatur Ist",
+        raumtemperatur_soll: "Raumtemperatur Soll",
+        raumfeuchtigkeit: "Raumfeuchtigkeit",
+      },
+    },
+  },
+  energie: {
+    label: "Energie und Stromtarif",
+    fields: {
+      gesamtverbrauch: "Gesamtverbrauch",
+      stromtarif: "Stromtarif",
+      tag: "Verbrauch heute",
+      woche: "Verbrauch diese Woche",
+      monat: "Verbrauch diesen Monat",
+      jahr: "Verbrauch dieses Jahr",
+      pv_ueberschuss: "PV-Überschuss",
+    },
+  },
+  temperatur: {
+    label: "Haus- und Aussentemperatur",
+    fields: { haus_mittelwert: "Mittlere Haustemperatur", aussen: "Aussentemperatur" },
+  },
+  thermostate: {
+    label: "Thermostate und Ferienmodus",
+    fields: {
+      ferienmodus: "Ferienmodus",
+      bad: "Bad",
+      buero: "Büro",
+      dusche: "Dusche",
+      gaestezimmer: "Gästezimmer",
+      kueche: "Küche",
+      schlafzimmer: "Schlafzimmer",
+      terrassenzimmer: "Terrassenzimmer",
+      toilette: "Toilette",
+      ess_wohnzimmer: "Ess- und Wohnzimmer",
+      sauna: "Sauna",
+    },
+  },
+  geraete: {
+    label: "Geräte",
+    fields: {
+      buero_klimaanlage: "Büro · Klimaanlage",
+      wintergarten_heizung: "Wintergarten · Heizung",
+      wintergarten_lueftung: "Wintergarten · Lüftung",
+      garage_entfeuchter: "Garage · Entfeuchter",
+      sauna_heizung: "Sauna · Heizung",
+    },
+  },
+};
+
+const SUGGESTED_DOMAINS = {
+  sensor: ["sensor", "number", "input_number"],
+  binary_sensor: ["binary_sensor", "input_boolean", "switch", "sensor"],
+  input_number: ["input_number", "number", "sensor"],
+};
+
+class DashboardCardEditor extends HTMLElement {
+  constructor() {
+    super();
+    const root = this.attachShadow({ mode: "open" });
+    const defaults = BUTTON_CONFIG.variables.entitaeten;
+    root.innerHTML = `
+      <style>
+        :host { display: block; min-width: 0; }
+        details { margin: 0 0 12px; border: 1px solid var(--divider-color, #8195a3); border-radius: 8px; }
+        summary { padding: 12px; font-weight: 600; cursor: pointer; }
+        details[open] > summary { border-bottom: 1px solid var(--divider-color, #8195a3); }
+        .sections { display: grid; gap: 16px; padding: 12px; }
+        fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+        legend { padding: 0 0 8px; font-weight: 600; }
+        .fields { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 205px), 1fr)); }
+        label { display: grid; align-content: start; gap: 6px; min-width: 0; }
+        input {
+          box-sizing: border-box;
+          width: 100%;
+          min-height: 40px;
+          padding: 8px 12px;
+          font: inherit;
+          color: inherit;
+          background: var(--card-background-color, transparent);
+          border: 1px solid var(--divider-color, #8195a3);
+          border-radius: 8px;
+        }
+        input:invalid { border-color: var(--error-color, #c23b4f); }
+      </style>
+      ${Object.entries(EDITOR_GROUPS).map(([group, { label, fields, sections }]) => `
+        <details data-group="${group}">
+          <summary>${label}</summary>
+          <div class="sections">
+            ${Object.entries(sections ?? { "": fields }).map(([title, entries]) => `
+              <fieldset${title ? "" : ` aria-label="${label}"`}>
+                ${title ? `<legend>${title}</legend>` : ""}
+                <div class="fields">
+                  ${Object.entries(entries).map(([key, name]) => {
+                    const domain = defaults[group][key].split(".")[0];
+                    return `<label>${name}<input name="${key}" data-group="${group}" list="ents-${domain}" pattern="[a-z0-9_]+[.][a-z0-9_]+" placeholder="Entität suchen" autocomplete="off"></label>`;
+                  }).join("")}
+                </div>
+              </fieldset>
+            `).join("")}
+          </div>
+        </details>
+      `).join("")}
+    `;
+    this._inputs = [...root.querySelectorAll("input")];
+    this._lists = new Map();
+    this._suggestionSignatures = new Map();
+    for (const input of this._inputs) {
+      const listId = input.getAttribute("list");
+      const domain = listId.slice("ents-".length);
+      if (!this._lists.has(domain)) {
+        const list = document.createElement("datalist");
+        list.id = listId;
+        root.append(list);
+        this._lists.set(domain, list);
+      }
+      input.addEventListener("change", () => this._changeEntity(input));
+    }
+  }
+
+  set hass(hass) {
+    const entities = new Map();
+    for (const [id, { attributes }] of Object.entries(hass?.states ?? {})) {
+      const domain = id.split(".")[0];
+      if (!entities.has(domain)) entities.set(domain, []);
+      entities.get(domain).push({ id, name: String(attributes?.friendly_name || id) });
+    }
+    for (const [domain, list] of this._lists) {
+      const domains = SUGGESTED_DOMAINS[domain] ?? [domain];
+      const matches = domains.flatMap(candidate => entities.get(candidate) ?? []);
+      const signature = JSON.stringify(matches);
+      if (this._suggestionSignatures.get(domain) === signature) continue;
+      this._suggestionSignatures.set(domain, signature);
+      const options = document.createDocumentFragment();
+      matches.sort((a, b) => a.name.localeCompare(b.name, "de", { numeric: true }));
+      for (const { id, name } of matches) {
+        const option = document.createElement("option");
+        option.value = id;
+        option.label = name;
+        options.append(option);
+      }
+      list.replaceChildren(options);
+    }
+  }
+
+  setConfig(config) {
+    applyEntityOverrides(structuredClone(BUTTON_CONFIG.variables.entitaeten), config.entitaeten);
+    this._config = config;
+    for (const input of this._inputs) {
+      const value = config.entitaeten?.[input.dataset.group]?.[input.name] ?? "";
+      if (input.value !== value) input.value = value;
+    }
+  }
+
+  _changeEntity(input) {
+    input.value = input.value.trim();
+    if (!input.reportValidity()) return;
+    const group = input.dataset.group;
+    const key = input.name;
+    const assigned = this._config.entitaeten ?? {};
+    const current = assigned[group] ?? {};
+    if (input.value === (current[key] ?? "")) return;
+
+    const updated = { ...current };
+    if (input.value) {
+      updated[key] = input.value;
+    } else {
+      delete updated[key];
+    }
+    const entitaeten = { ...assigned };
+    if (Object.keys(updated).length) {
+      entitaeten[group] = updated;
+    } else {
+      delete entitaeten[group];
+    }
+    const config = { ...this._config, entitaeten };
+    this.setConfig(config);
+    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
   }
 }
 
@@ -5523,8 +5758,10 @@ const BUTTON_CONFIG = {
 };
 
 const CARD_TYPE = "waermepumpe-dashboard-card";
+const EDITOR_TYPE = `${CARD_TYPE}-editor`;
 
 if (!customElements.get(CARD_TYPE)) {
+  customElements.define(EDITOR_TYPE, DashboardCardEditor);
   customElements.define(CARD_TYPE, DashboardCard);
   window.customCards ??= [];
   window.customCards.push({
