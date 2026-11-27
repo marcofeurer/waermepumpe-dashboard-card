@@ -2039,7 +2039,6 @@ const BUTTON_CONFIG = {
           "action": "fire-dom-event",
           "browser_mod": {
             "data": {
-              "browser_id": "THIS",
               "content": {
                 "cards": [
                   {
@@ -2646,7 +2645,6 @@ const BUTTON_CONFIG = {
           "action": "fire-dom-event",
           "browser_mod": {
             "data": {
-              "browser_id": "THIS",
               "content": {
                 "aspect_ratio": "100%",
                 "type": "iframe"
@@ -2707,7 +2705,6 @@ const BUTTON_CONFIG = {
           "action": "fire-dom-event",
           "browser_mod": {
             "data": {
-              "browser_id": "THIS",
               "content": {
                 "entity": "[[[ return variables.entitaeten.geraete.buero_klimaanlage; ]]]",
                 "features": [
@@ -2776,7 +2773,6 @@ const BUTTON_CONFIG = {
           "action": "fire-dom-event",
           "browser_mod": {
             "data": {
-              "browser_id": "THIS",
               "content": {
                 "entity": "[[[ return variables.entitaeten.geraete.wintergarten_heizung; ]]]",
                 "features": [
@@ -2842,7 +2838,6 @@ const BUTTON_CONFIG = {
           "action": "fire-dom-event",
           "browser_mod": {
             "data": {
-              "browser_id": "THIS",
               "content": {
                 "entity": "[[[ return variables.entitaeten.geraete.wintergarten_lueftung; ]]]",
                 "features": [
@@ -2908,7 +2903,6 @@ const BUTTON_CONFIG = {
           "action": "fire-dom-event",
           "browser_mod": {
             "data": {
-              "browser_id": "THIS",
               "content": {
                 "entity": "[[[ return variables.entitaeten.geraete.garage_entfeuchter; ]]]",
                 "features": [
@@ -2974,7 +2968,6 @@ const BUTTON_CONFIG = {
           "action": "fire-dom-event",
           "browser_mod": {
             "data": {
-              "browser_id": "THIS",
               "content": {
                 "entity": "[[[ return variables.entitaeten.geraete.sauna_heizung; ]]]",
                 "features": [
